@@ -1,5 +1,9 @@
 package;
 
+import lime.ui.WindowAttributes;
+#if lime
+import lime.graphics.RenderContextAttributes;
+#end
 #if macro
 import haxe.macro.Compiler;
 import haxe.macro.Context;
@@ -14,8 +18,10 @@ import haxe.macro.Expr;
 class ApplicationMain
 {
 	#if !macro
-	public static function main()
-	{
+	private static var _app:openfl.display.Application;
+	private static var _config:Dynamic;
+
+	public static function main() {
 		lime.system.System.__registerEntryPoint("::APP_FILE::", create);
 
 		#if (js && html5)
@@ -27,49 +33,47 @@ class ApplicationMain
 		#end
 	}
 
-	public static function create(config):Void
-	{
-		var app = new openfl.display.Application();
+	public static function create(config):Void {
+		_app = new openfl.display.Application();
+		_config = config;
 
 		#if !disable_preloader_assets
 		ManifestResources.init(config);
 		#end
 
-		app.meta["build"] = "::meta.buildNumber::";
-		app.meta["company"] = "::meta.company::";
-		app.meta["file"] = "::APP_FILE::";
-		app.meta["name"] = "::meta.title::";
-		app.meta["packageName"] = "::meta.packageName::";
-		app.meta["version"] = "::meta.version::";
+		_app.meta["build"] = "::meta.buildNumber::";
+		_app.meta["company"] = "::meta.company::";
+		_app.meta["file"] = "::APP_FILE::";
+		_app.meta["name"] = "::meta.title::";
+		_app.meta["packageName"] = "::meta.packageName::";
+		_app.meta["version"] = "::meta.version::";
 
-		::if (config.hxtelemetry != null)::#if hxtelemetry
-		app.meta["hxtelemetry-allocations"] = "::config.hxtelemetry.allocations::";
-		app.meta["hxtelemetry-host"] = "::config.hxtelemetry.host::";
+		::if (_config.hxtelemetry != null)::#if hxtelemetry
+		_app.meta["hxtelemetry-allocations"] = "::config.hxtelemetry.allocations::";
+		_app.meta["hxtelemetry-host"] = "::config.hxtelemetry.host::";
 		#end::end::
 
+		// only create window and execute app if noautoexec define Doesn't exists
+		#if !noautoexec
+		createWindows();
+
+		_app.init();
+
+		var result = _app.exec();
+
+		#if (sys && !ios && !nodejs && !emscripten)
+		lime.system.System.exit(result);
+		#end
+		#end
+	}
+
+	public static function createWindows():Void {
+		trace("ApplicationMain: createWindows called");
 		#if !flash
 		::foreach windows::
-		var attributes:lime.ui.WindowAttributes = {
-			allowHighDPI: ::allowHighDPI::,
-			alwaysOnTop: ::alwaysOnTop::,
-			borderless: ::borderless::,
-			// display: ::display::,
-			element: null,
-			frameRate: ::fps::,
-			#if !web fullscreen: ::fullscreen::, #end
-			height: ::height::,
-			hidden: #if munit true #else ::hidden:: #end,
-			maximized: ::maximized::,
-			minimized: ::minimized::,
-			parameters: ::parameters::,
-			resizable: ::resizable::,
-			title: "::title::",
-			width: ::width::,
-			x: ::x::,
-			y: ::y::,
-		};
+		var foreignHandle:Null<Int> = cast ::foreignHandle::;
 
-		attributes.context = {
+		var renderContext = {
 			antialiasing: ::antialiasing::,
 			background: ::background::,
 			colorDepth: ::colorDepth::,
@@ -80,70 +84,132 @@ class ApplicationMain
 			vsync: ::vsync::
 		};
 
-		if (app.window == null)
-		{
-			if (config != null)
-			{
-				for (field in Reflect.fields(config))
-				{
-					if (Reflect.hasField(attributes, field))
-					{
-						Reflect.setField(attributes, field, Reflect.field(config, field));
-					}
-					else if (Reflect.hasField(attributes.context, field))
-					{
-						Reflect.setField(attributes.context, field, Reflect.field(config, field));
+		if (0 == foreignHandle || null == foreignHandle) {
+			var attributes:lime.ui.WindowAttributes = {
+				allowHighDPI: ::allowHighDPI::,
+				alwaysOnTop: ::alwaysOnTop::,
+			borderless: ::borderless::,
+			// display: ::display::,
+			element: null,
+			frameRate: ::fps::,
+			#if !web fullscreen: ::fullscreen::, #end
+			height: ::height::,
+			hidden: #if munit true #else ::hidden:: #end,
+			maximized: ::maximized::,
+			minimized: ::minimized::,
+				parameters: ::parameters::,
+				resizable: ::resizable::,
+				title: "::title::",
+				width: ::width::,
+				x: ::x::,
+				y: ::y::,
+				context: renderContext,
+			};
+
+			if (_app.window == null) {
+				if (_config != null) {
+					var configFields:Array<String> = Reflect.fields(_config);
+					var n:Int = -1;
+					while (++n < configFields.length) {
+						var field = configFields[n];
+						if (Reflect.hasField(attributes, field)) {
+							Reflect.setField(attributes, field, Reflect.field(_config, field));
+						} else if (Reflect.hasField(attributes.context, field)) {
+							Reflect.setField(attributes.context, field, Reflect.field(_config, field));
+						}
 					}
 				}
-			}
 
-			#if sys
-			lime.system.System.__parseArguments(attributes);
+				#if sys
+				lime.system.System.__parseArguments(attributes);
+				#end
+			}
+			createWindow(attributes);
+		} else {
+			#if lime
+			createWindowFrom(foreignHandle, renderContext, ::fps::);
 			#end
 		}
-
-		app.createWindow(attributes);
 		::end::
+
 		#elseif !air
-		app.window.context.attributes.background = ::WIN_BACKGROUND::;
-		app.window.frameRate = ::WIN_FPS::;
+		_app.window.context.attributes.background = ::WIN_BACKGROUND::;
+		_app.window.frameRate = ::WIN_FPS::;
 		#end
 
+		preload();
+	}
+
+	public static function createWindow(attributes:WindowAttributes):openfl.display.Window {
+		trace("ApplicationMain: createWindow called");
+		var curWindow = _app.createWindow(attributes);
+		// if this window has the lowest id of existing windows...
+		if (!_app.__windowByID.exists(curWindow.id - 1)) {
+			// ...it must be the primary, so set focus on it
+			curWindow.focus();
+		}
+		return curWindow;
+	}
+
+	#if lime
+	public static function createWindowFrom(foreignHandle:Int, ?contextAttributes:RenderContextAttributes, ?frameRate:Int):openfl.display.Window {
+		var isPrimary:Bool = (_app.window == null);
+		if (isPrimary) {
+			trace("ApplicationMain: createWindowFrom creating the primary window");
+		} else {
+			trace("ApplicationMain: createWindowFrom creating a secondary window");
+		}
+		var curWindow = _app.createWindowFrom(foreignHandle, contextAttributes);
+		if (frameRate == null) frameRate = ::fps:: == null ? 30 : ::fps::;
+		curWindow.frameRate = frameRate;
+		if (isPrimary) {
+			// ...it must be the primary, so set focus on it
+			trace('ApplicationMain: createWindowFrom - Window is primary, so give it focus');
+			curWindow.focus();
+		}
+		
+		return curWindow;
+	}
+	#end
+
+	public static function setUpApp():Void {
+		trace("ApplicationMain: setUpApp called");
+		preload();
+		_app.init();
+	}
+
+	private static function preload():Void {
+		trace("ApplicationMain: preload called");
 		var preloader = getPreloader();
-		app.preloader.onProgress.add (function(loaded, total)
-		{
+		_app.preloader.onProgress.add (function(loaded, total) {
 			@:privateAccess preloader.update(loaded, total);
 		});
-		app.preloader.onComplete.add(function()
-		{
+		_app.preloader.onComplete.add(function() {
+			trace("ApplicationMain: calling openfl.display.Preloader.start");
 			@:privateAccess preloader.start();
 		});
 
-		preloader.onComplete.add(start.bind((cast app.window:openfl.display.Window).stage));
+		preloader.onComplete.add(start.bind((cast _app.window:openfl.display.Window).stage));
 
 		#if !disable_preloader_assets
-		for (library in ManifestResources.preloadLibraries)
-		{
-			app.preloader.addLibrary(library);
+		var preloadLibs = ManifestResources.preloadLibraries;
+		var n:Int = -1;
+		while (++n < preloadLibs.length) {
+			_app.preloader.addLibraryName(preloadLibs[n]);
 		}
-
-		for (name in ManifestResources.preloadLibraryNames)
-		{
-			app.preloader.addLibraryName(name);
+		
+		var preloadLibNames = ManifestResources.preloadLibraryNames;
+		var n:Int = -1;
+		while (++n < preloadLibNames.length) {
+			_app.preloader.addLibraryName(preloadLibNames[n]);
 		}
 		#end
 
-		app.preloader.load();
-
-		var result = app.exec();
-
-		#if (sys && !ios && !nodejs && !emscripten)
-		lime.system.System.exit(result);
-		#end
+		_app.preloader.load();
 	}
 
-	public static function start(stage:openfl.display.Stage):Void
-	{
+	public static function start(stage:openfl.display.Stage):Void {
+		trace("ApplicationMain: start called");
 		#if flash
 		ApplicationMain.getEntryPoint();
 		#else
@@ -170,7 +236,7 @@ class ApplicationMain
 		else
 		{
 			ApplicationMain.getEntryPoint();
-
+			trace("ApplicationMain: getEntryPoint called");
 			stage.dispatchEvent(new openfl.events.Event(openfl.events.Event.RESIZE, false, false));
 
 			if (stage.window.fullscreen)
@@ -273,7 +339,11 @@ class ApplicationMain
 		::else::
 		return macro
 		{
+			#if noPreloader
+			new openfl.display.Preloader();
+			#else
 			new openfl.display.Preloader(new openfl.display.Preloader.DefaultPreloader());
+			#end
 		};
 		::end::
 	}
