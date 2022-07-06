@@ -1464,7 +1464,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 					i++;
 				}
 
-				for (j in 0...i)
+				var j:Int = -1;
+				while (j++ < i - 1)
 				{
 					stack[i - j - 1].__dispatch(event);
 				}
@@ -1501,8 +1502,10 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 		{
 			var extension = Rectangle.__pool.get();
 
-			for (filter in __filters)
+			var i:Int = -1;
+			while (i++ < __filters.length - 1)
 			{
+				var filter = __filters[i];
 				extension.__expand(-filter.__leftExtension,
 					-filter.__topExtension, filter.__leftExtension
 					+ filter.__rightExtension,
