@@ -2790,13 +2790,13 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			{
 				#if openfl_pool_events
 				var mouseEvent = MouseEvent.__pool.get();
-				mouseEvent.type = MouseEvent.ROLL_OVER;
+				mouseEvent.type = MouseEvent.MOUSE_OVER;
 				mouseEvent.stageX = __mouseX;
 				mouseEvent.stageY = __mouseY;
-				var local = __mouseOverTarget.__globalToLocal(targetPoint, localPoint);
+				var local = target.__globalToLocal(targetPoint, localPoint);
 				mouseEvent.localX = local.x;
 				mouseEvent.localY = local.y;
-				mouseEvent.target = item;
+				mouseEvent.target = target;
 				event = mouseEvent;
 				#else
 				event = MouseEvent.__create(MouseEvent.MOUSE_OVER, button, __mouseX, __mouseY, target.__globalToLocal(targetPoint, localPoint), cast target);
