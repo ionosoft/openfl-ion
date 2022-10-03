@@ -2,6 +2,7 @@ package openfl.display;
 
 import openfl.utils._internal.Lib;
 #if lime
+import lime.graphics.RenderContextAttributes;
 import lime.app.Application;
 import lime.ui.Window as LimeWindow;
 import lime.ui.WindowAttributes;
@@ -35,12 +36,36 @@ class Window #if lime extends LimeWindow #end
 	#end
 
 	@SuppressWarnings("checkstyle:Dynamic")
-	@:noCompletion private function new(application:Application, attributes:#if lime WindowAttributes #else Dynamic #end)
+	@:noCompletion private function new(application:Application)
 	{
 		#if lime
-		super(application, attributes);
+		super(application);
+		#end
+	}
+
+	@SuppressWarnings("checkstyle:Dynamic")
+	@:noCompletion public #if lime override #end function create(attributes:#if lime WindowAttributes #else Dynamic #end):Void
+	{
+		#if lime
+		super.create(attributes);
 		#end
 
+		finishInit(attributes);
+	}
+
+	@SuppressWarnings("checkstyle:Dynamic")
+	@:noCompletion public #if lime override #end function createFrom(foreignHandle:Int, attributes:#if lime RenderContextAttributes #else Dynamic #end):Void
+	{
+		#if lime
+		super.createFrom(foreignHandle, attributes);
+		#end
+
+		finishInit({context: attributes});
+	}
+
+	@SuppressWarnings("checkstyle:Dynamic")
+	private function finishInit(attributes:#if lime WindowAttributes #else Dynamic #end):Void
+	{
 		#if (!flash && !macro)
 		#if commonjs
 		if (Reflect.hasField(attributes, "stage"))

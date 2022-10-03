@@ -158,6 +158,7 @@ import js.html.CanvasRenderingContext2D;
 					  outside the bitmap:
 
 					  ![60 by 60 pixel image with no repeating](/images/movieClip_beginBitmapFill_repeat_3.jpg)
+
 		@param smooth If `false`, upscaled bitmap images are rendered
 					  by using a nearest-neighbor algorithm and look pixelated. If
 					  `true`, upscaled bitmap images are rendered by
@@ -267,6 +268,7 @@ import js.html.CanvasRenderingContext2D;
 		![linear gradient with SpreadMethod.REPEAT](/images/beginGradientFill_spread_repeat.jpg)
 
 		@param	interpolationMethod	A value from the InterpolationMethod class that specifies which value to use:
+
 		`InterpolationMethod.LINEAR_RGB` or `InterpolationMethod.RGB`
 
 		For example, consider a simple linear gradient between two colors (with the `spreadMethod` parameter set to
@@ -294,7 +296,8 @@ import js.html.CanvasRenderingContext2D;
 		{
 			alphas = [];
 
-			for (i in 0...colors.length)
+			var i:Int = colors.length;
+			while (i-- > 0)
 			{
 				alphas.push(1);
 			}
@@ -304,7 +307,8 @@ import js.html.CanvasRenderingContext2D;
 		{
 			ratios = [];
 
-			for (i in 0...colors.length)
+			var i:Int = -1;
+			while (i++ < colors.length - 1)
 			{
 				ratios.push(Math.ceil((i / colors.length) * 255));
 			}
@@ -314,9 +318,10 @@ import js.html.CanvasRenderingContext2D;
 
 		__commands.beginGradientFill(type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio);
 
-		for (alpha in alphas)
+		var i:Int = alphas.length;
+		while (i-- > 0)
 		{
-			if (alpha > 0)
+			if (alphas[i] > 0)
 			{
 				__visible = true;
 				break;
@@ -393,7 +398,6 @@ import js.html.CanvasRenderingContext2D;
 	/**
 		Clears the graphics that were drawn to this Graphics object, and resets
 		fill and line style settings.
-
 	**/
 	public function clear():Void
 	{
@@ -670,11 +674,10 @@ import js.html.CanvasRenderingContext2D;
 		instances can refer to a part of a shape, or a complex fully defined set
 		of data for rendering a complete shape.
 
-		 Graphics paths can contain other graphics paths. If the
+		Graphics paths can contain other graphics paths. If the
 		`graphicsData` Vector includes a path, that path and all its
 		sub-paths are rendered during this operation.
-
-	**/
+	 **/
 	public function drawGraphicsData(graphicsData:Vector<IGraphicsData>):Void
 	{
 		var fill:GraphicsSolidFill;
@@ -686,8 +689,10 @@ import js.html.CanvasRenderingContext2D;
 		var trianglePath:GraphicsTrianglePath;
 		var quadPath:GraphicsQuadPath;
 
-		for (graphics in graphicsData)
+		var i:Int = -1;
+		while (i++ < graphicsData.length - 1)
 		{
+			var graphics = graphicsData[i];
 			switch (graphics.__graphicsDataType)
 			{
 				case SOLID:
@@ -788,12 +793,15 @@ import js.html.CanvasRenderingContext2D;
 		for filling and drawing lines. They are:
 
 		* When a fill is applied to rendering a path:
+
 			* A sub-path of less than 3 points is not rendered.(But note that the
 			stroke rendering will still occur, consistent with the rules for strokes
 			below.)
 			* A sub-path that isn't closed(the end point is not equal to the
 			begin point) is implicitly closed.
+
 		* When a stroke is applied to rendering a path:
+
 			* The sub-paths can be composed of any number of points.
 			* The sub-path is never implicitly closed.
 
@@ -812,9 +820,10 @@ import js.html.CanvasRenderingContext2D;
 
 		if (winding == GraphicsPathWinding.NON_ZERO) __commands.windingNonZero();
 
-		for (command in commands)
+		var i:Int = -1;
+		while (i++ < commands.length - 1)
 		{
-			switch (command)
+			switch (commands[i])
 			{
 				case GraphicsPathCommand.MOVE_TO:
 					moveTo(data[dataIndex], data[dataIndex + 1]);
@@ -916,7 +925,8 @@ import js.html.CanvasRenderingContext2D;
 
 		var ri, ti;
 
-		for (i in 0...length)
+		var i:Int = -1;
+		while (i++ < length - 1)
 		{
 			ri = (hasIndices ? (indices[i] * 4) : i * 4);
 			if (ri < 0) continue;
@@ -1128,7 +1138,8 @@ import js.html.CanvasRenderingContext2D;
 
 			indices = new Vector<Int>();
 
-			for (i in 0...vertLength)
+			var i:Int = -1;
+			while (i++ < vertLength - 1)
 			{
 				indices.push(i);
 			}
@@ -1145,7 +1156,8 @@ import js.html.CanvasRenderingContext2D;
 		var maxX = Math.NEGATIVE_INFINITY;
 		var maxY = Math.NEGATIVE_INFINITY;
 
-		for (i in 0...vertLength)
+		var i:Int = -1;
+		while (i++ < vertLength - 1)
 		{
 			x = vertices[i * 2];
 			y = vertices[i * 2 + 1];
@@ -1174,7 +1186,6 @@ import js.html.CanvasRenderingContext2D;
 		method. If the current drawing position does not equal the previous
 		position specified in a `moveTo()` method and a fill is
 		defined, the path is closed with a line and then filled.
-
 	**/
 	public function endFill():Void
 	{
@@ -1189,7 +1200,6 @@ import js.html.CanvasRenderingContext2D;
 		method. The line style remains in effect until you call the
 		`lineStyle()` or `lineGradientStyle()` methods, or
 		the `lineBitmapStyle()` method again with different parameters.
-
 
 		You can call the `lineBitmapStyle()` method in the middle of
 		drawing a path to specify different styles for different line segments
@@ -1726,8 +1736,10 @@ import js.html.CanvasRenderingContext2D;
 		var data = new DrawCommandReader(__commands);
 		var path = null, stroke;
 
-		for (type in __commands.types)
+		var i:Int = -1;
+		while (i++ < __commands.types.length - 1)
 		{
+			var type = __commands.types[i];
 			switch (type)
 			{
 				case CUBIC_CURVE_TO, CURVE_TO, LINE_TO, MOVE_TO, DRAW_CIRCLE, DRAW_ELLIPSE, DRAW_RECT, DRAW_ROUND_RECT:

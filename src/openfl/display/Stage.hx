@@ -1152,8 +1152,10 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		{
 			var dispatchers = DisplayObject.__broadcastEvents.get(event.type);
 
-			for (dispatcher in dispatchers)
+			var n:Int = dispatchers.length;
+			while (n-- > 0)
 			{
+				var dispatcher = dispatchers[n];
 				// TODO: Way to resolve dispatching occurring if object not on stage
 				// and there are multiple stage objects running in HTML5?
 
@@ -1287,8 +1289,10 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 					event.eventPhase = EventPhase.CAPTURING_PHASE;
 					event.target = stack[stack.length - 1];
 
-					for (i in 0...length - 1)
+					var i:Int = -1;
+					while (++i < length)
 					{
+						if (stack[i] == null) break;
 						stack[i].__dispatch(event);
 
 						if (event.__isCanceled)
@@ -1555,7 +1559,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 					targetPoint.y = __mouseY;
 
 					#if openfl_pool_events
-
 					var clickEvent = MouseEvent.__pool.get();
 					clickEvent.type = MouseEvent.CLICK;
 					clickEvent.stageX = __mouseX;

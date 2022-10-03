@@ -2,6 +2,7 @@ package openfl.display;
 
 import openfl.utils._internal.Lib;
 #if lime
+import lime.graphics.RenderContextAttributes;
 import lime.app.Application as LimeApplication;
 import lime.ui.WindowAttributes;
 #end
@@ -32,7 +33,7 @@ class Application #if lime extends LimeApplication #end
 		super();
 		#end
 
-		if (Lib.application == null)
+		if (Lib.application == null || Lib.application != this)
 		{
 			Lib.application = this;
 		}
@@ -47,8 +48,41 @@ class Application #if lime extends LimeApplication #end
 	#if lime
 	public override function createWindow(attributes:WindowAttributes):Window
 	{
-		var window = new Window(this, attributes);
+		var window = new Window(this);
+		window.create(attributes);
+		if (window.id == -1) {
+			@:privateAccess window.__created = false;
+			return null;
+		}
 
+		initWindow(window);
+
+		return window;
+	}
+
+	public override function createWindowFrom(foreignHandle:Int, attributes:RenderContextAttributes, maxTries:Int = 5):Window
+	{
+		var window = new Window(this);
+		var tries:Int = 0;
+		while (tries < maxTries) {
+			window.createFrom(foreignHandle, attributes);
+			if (window.id != -1) break;
+			tries++;
+		}
+		if (window.id == -1) {
+			//... Pump some helpful error here. Just a trace for now.
+			trace('Could not create window');
+			@:privateAccess window.__created = false;
+			return null;
+		} else {
+			initWindow(window);
+		}
+
+		return window;
+	}
+
+	private function initWindow(window:Window):Void
+	{
 		__windows.push(window);
 		__windowByID.set(window.id, window);
 
@@ -88,8 +122,6 @@ class Application #if lime extends LimeApplication #end
 		}
 
 		onCreateWindow.dispatch(window);
-
-		return window;
 	}
 	#end
 }
