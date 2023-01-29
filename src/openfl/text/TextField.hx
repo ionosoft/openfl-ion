@@ -2344,6 +2344,11 @@ class TextField extends InteractiveObject
 		{
 			var i = lineIndex, tempHeight = 0.0;
 
+			if (i >= __textEngine.lineHeights.length)
+			{
+				i = __textEngine.lineHeights.length - 1;
+			}
+
 			while (i >= 0)
 			{
 				tempHeight += __textEngine.lineHeights[i];
@@ -3040,6 +3045,9 @@ class TextField extends InteractiveObject
 
 		if (value != __textEngine.type)
 		{
+			// set type here instead of in return below because this_onFocusIn()
+			// needs to know the correct type
+			__textEngine.type = value;
 			if (value == TextFieldType.INPUT)
 			{
 				addEventListener(Event.ADDED_TO_STAGE, this_onAddedToStage);
@@ -3060,7 +3068,7 @@ class TextField extends InteractiveObject
 			__setRenderDirty();
 		}
 
-		return __textEngine.type = value;
+		return __textEngine.type;
 	}
 
 	override private function get_width():Float
@@ -3231,24 +3239,9 @@ class TextField extends InteractiveObject
 	{
 		__stopCursorTimer();
 
-		// TODO: Better system
-
-		if (event.relatedObject == null || !(event.relatedObject is TextField))
-		{
-			__stopTextInput();
-		}
-		else
-		{
-			if (stage != null)
-			{
-				#if lime
-				stage.window.onTextInput.remove(window_onTextInput);
-				stage.window.onKeyDown.remove(window_onKeyDown);
-				#end
-			}
-
-			__inputEnabled = false;
-		}
+		// even if the related object is another TextField, we should stop
+		// text input. this ensures that any incomplete IME input is committed.
+		__stopTextInput();
 
 		if (__selectionIndex != __caretIndex)
 		{
