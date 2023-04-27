@@ -198,7 +198,7 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 			"endian": {
 				get: untyped #if haxe4 js.Syntax.code #else __js__ #end ("function () { return this.get_endian (); }"),
 				set: untyped #if haxe4 js.Syntax.code #else __js__ #end ("function (v) { return this.set_endian (v); }")
-			},
+			}
 		});
 	}
 	#end
@@ -1082,7 +1082,24 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 		var b = new BytesBuffer();
 		var bLength = 0;
 
-		if (connected || doConnect)
+		if (doConnect)
+		{
+			try
+			{
+				var peer = __socket.peer();
+				if (peer == null)
+				{
+					// not connected yet (hxcpp and hl)
+					return;
+				}
+			}
+			catch (e:Dynamic)
+			{
+				// not connected yet (neko)
+				return;
+			}
+		}
+		else if (connected)
 		{
 			try
 			{
