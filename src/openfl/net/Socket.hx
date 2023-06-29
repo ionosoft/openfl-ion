@@ -198,7 +198,7 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 			"endian": {
 				get: untyped #if haxe4 js.Syntax.code #else __js__ #end ("function () { return this.get_endian (); }"),
 				set: untyped #if haxe4 js.Syntax.code #else __js__ #end ("function (v) { return this.set_endian (v); }")
-			},
+			}
 		});
 	}
 	#end
@@ -398,7 +398,15 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 		__socket.onclose = socket_onClose;
 		__socket.onerror = socket_onError;
 		#else
-		__socket = new SysSocket();
+		try
+		{
+			__socket = new SysSocket();
+		}
+		catch (e:Dynamic)
+		{
+			dispatchEvent(new IOErrorEvent(IOErrorEvent.IO_ERROR, true, false, "Connection failed"));
+			return;
+		}
 
 		try
 		{
@@ -1061,22 +1069,37 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 
 		if (!connected)
 		{
-			var r = SysSocket.select(null, [__socket], null, 0);
-
-			if (r.write[0] == __socket)
-			{
-				doConnect = true;
-			}
-			else if (Sys.time() - __timestamp > timeout / 1000)
+			if (Sys.time() - __timestamp > timeout / 1000)
 			{
 				doClose = true;
+			}
+			else
+			{
+				doConnect = true;
 			}
 		}
 
 		var b = new BytesBuffer();
 		var bLength = 0;
 
-		if (connected || doConnect)
+		if (doConnect)
+		{
+			try
+			{
+				var peer = __socket.peer();
+				if (peer == null)
+				{
+					// not connected yet (hxcpp and hl)
+					return;
+				}
+			}
+			catch (e:Dynamic)
+			{
+				// not connected yet (neko)
+				return;
+			}
+		}
+		else if (connected)
 		{
 			try
 			{
@@ -1103,7 +1126,11 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 				switch (e)
 				{
 					case Error.Blocked:
-					case Error.Custom(Error.Blocked):
+					case Error.Custom(custom):
+						if (custom != Error.Blocked && custom != "EOF")
+						{
+							doClose = true;
+						}
 					default:
 						doClose = true;
 				}
