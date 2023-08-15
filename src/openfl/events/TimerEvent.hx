@@ -40,8 +40,6 @@ class TimerEvent extends Event
 	**/
 	public static inline var TIMER_COMPLETE:EventType<TimerEvent> = "timerComplete";
 
-	@:noCompletion private var __updateAfterEventFlag:Bool;
-
 	// @:noCompletion private static var __pool:ObjectPool<TimerEvent> = new ObjectPool<TimerEvent>(function() return new TimerEvent(null),
 	// 	function(event) event.__init());
 
@@ -63,7 +61,6 @@ class TimerEvent extends Event
 	public function new(type:String, bubbles:Bool = false, cancelable:Bool = false):Void
 	{
 		super(type, bubbles, cancelable);
-		__updateAfterEventFlag = false;
 	}
 
 	public override function clone():TimerEvent
@@ -81,13 +78,11 @@ class TimerEvent extends Event
 	}
 
 	/**
-		Instructs OpenFL to render after processing of this event completes, if
-		the display list has been modified.
+		Instructs Flash Player or the AIR runtime to render after processing of
+		this event completes, if the display list has been modified.
+
 	**/
-	public function updateAfterEvent():Void
-	{
-		__updateAfterEventFlag = true;
-	}
+	public function updateAfterEvent():Void {}
 }
 #else
 typedef TimerEvent = flash.events.TimerEvent;

@@ -538,15 +538,11 @@ import sys.io.Process;
 	#end
 
 	/**
-		Specifies whether the system supports multichannel audio of a specific
-		type. The class flash.media.AudioDecoder enumerates the possible types.
+		Specifies whether the system supports multichannel audio of a specific type. The
+		class flash.media.AudioDecoder enumerates the possible types.
 
-		_OpenFL target support:_ Not supported, except when targeting AIR.
-
-		_Adobe AIR profile support:_ Multichannel audio is supported only on AIR
-		for TV devices. On all other devices, this method always returns
-		`false`. See
-		[AIR Profile Support](http://help.adobe.com/en_US/air/build/WS144092a96ffef7cc16ddeea2126bb46b82f-8000.html)
+		_AIR profile support:_ Multichannel audio is supported only on AIR for TV devices.
+		On all other devices, this method always returns `false`. See AIR Profile Support
 		for more information regarding API support across multiple profiles.
 
 		**Note:** When using one of the DTS audio codecs, scenarios exist in which

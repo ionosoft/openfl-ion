@@ -44,12 +44,10 @@ class Build extends Script
 
 		hxml.build();
 
-		switch (target)
+		switch(target)
 		{
 			case "hl":
-				var hdllPath = NDLL.getLibraryPath(new NDLL("lime", new Haxelib("lime")), getPlatformDirectoryName());
-				hdllPath = hdllPath.substr(0, hdllPath.length - Path.extension(hdllPath).length) + "hdll";
-				System.copyFile(hdllPath, "bin/hl/lime.hdll");
+				System.copyFile(NDLL.getLibraryPath(new NDLL("lime", new Haxelib("lime")), getPlatformDirectoryName()), "bin/hl/lime.hdll");
 				var limePath = Haxelib.getPath(new Haxelib("lime"));
 				var hashlinkPath = Path.join([limePath, "templates/bin/hl", getHashLinkPlatformDirectoryName()]);
 				System.recursiveCopy(hashlinkPath, "bin/hl", null, false);
@@ -59,8 +57,7 @@ class Build extends Script
 				}
 				System.runCommand("bin/hl", "./hl", ["Test.hl"]);
 			case "neko":
-				var ndllPath = NDLL.getLibraryPath(new NDLL("lime", new Haxelib("lime")), getPlatformDirectoryName());
-				System.copyFile(ndllPath, "bin/neko/lime.ndll");
+				System.copyFile(NDLL.getLibraryPath(new NDLL("lime", new Haxelib("lime")), getPlatformDirectoryName()), "bin/neko/lime.ndll");
 				var nekoPath = "neko";
 				System.runCommand("bin/neko", nekoPath, ["Test.n"]);
 			case "cpp":

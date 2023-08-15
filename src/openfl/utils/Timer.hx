@@ -34,8 +34,6 @@ import js.Browser;
 @:fileXml('tags="haxe,release"')
 @:noDebug
 #end
-@:access(openfl.display.Stage)
-@:access(openfl.events.TimerEvent)
 class Timer extends EventDispatcher
 {
 	/**
@@ -218,15 +216,6 @@ class Timer extends EventDispatcher
 		return __repeatCount = v;
 	}
 
-	@:noCompletion private function __handleUpdateAfterEvent():Void
-	{
-		if (Lib.current == null || Lib.current.stage == null)
-		{
-			return;
-		}
-		Lib.current.stage.__renderAfterEvent();
-	}
-
 	// Event Handlers
 	@:noCompletion private function timer_onTimer():Void
 	{
@@ -235,27 +224,12 @@ class Timer extends EventDispatcher
 		if (__repeatCount > 0 && currentCount >= __repeatCount)
 		{
 			stop();
-			var event = new TimerEvent(TimerEvent.TIMER);
-			dispatchEvent(event);
-			if (event.__updateAfterEventFlag)
-			{
-				__handleUpdateAfterEvent();
-			}
-			event = new TimerEvent(TimerEvent.TIMER_COMPLETE);
-			dispatchEvent(event);
-			if (event.__updateAfterEventFlag)
-			{
-				__handleUpdateAfterEvent();
-			}
+			dispatchEvent(new TimerEvent(TimerEvent.TIMER));
+			dispatchEvent(new TimerEvent(TimerEvent.TIMER_COMPLETE));
 		}
 		else
 		{
-			var event = new TimerEvent(TimerEvent.TIMER);
-			dispatchEvent(event);
-			if (event.__updateAfterEventFlag)
-			{
-				__handleUpdateAfterEvent();
-			}
+			dispatchEvent(new TimerEvent(TimerEvent.TIMER));
 		}
 	}
 }
