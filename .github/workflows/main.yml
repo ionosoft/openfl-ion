@@ -164,7 +164,7 @@ jobs:
           haxelib run hxp test -Dtarget=air -Duse-lime-tools --install-hxp-alias
 
   package-haxelib:
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
 
       - uses: actions/checkout@v3
@@ -200,7 +200,7 @@ jobs:
           if-no-files-found: error
 
   docs:
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
 
       - uses: actions/checkout@v3
