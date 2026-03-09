@@ -2609,6 +2609,18 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		MouseEvent.__pool.release(event);
 		#end
 
+		// If the display tree was rebuilt during dispatch (e.g. undo),
+		// the local stack and target are stale. Clean up and bail out.
+		if (target.stage == null) {
+			__mouseOverTarget = null;
+			__mouseOutStack = [];
+			__rollOutStack = [];
+			__lastClickTarget = null;
+			Point.__pool.release(targetPoint);
+			Point.__pool.release(localPoint);
+			return;
+		}
+
 		if (clickType != null)
 		{
 			#if openfl_pool_events
@@ -2663,6 +2675,18 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 					__lastClickTime = currentTime;
 				}
 			}
+		}
+
+		// If the display tree was rebuilt during dispatch (e.g. undo),
+		// the local stack and target are stale. Clean up and bail out.
+		if (target.stage == null) {
+			__mouseOverTarget = null;
+			__mouseOutStack = [];
+			__rollOutStack = [];
+			__lastClickTarget = null;
+			Point.__pool.release(targetPoint);
+			Point.__pool.release(localPoint);
+			return;
 		}
 
 		if (Mouse.__cursor == MouseCursor.AUTO && !Mouse.__hidden)
