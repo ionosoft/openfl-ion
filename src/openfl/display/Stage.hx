@@ -894,6 +894,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	@:noCompletion private var __quality:StageQuality;
 	@:noCompletion private var __renderer:DisplayObjectRenderer;
 	@:noCompletion private var __rendering:Bool;
+	@:noCompletion private var __pinnedMouseStack:Dynamic;
 	@:noCompletion private var __rollOutStack:Array<DisplayObject>;
 	@:noCompletion private var __scaleMode:StageScaleMode;
 	@:noCompletion private var __stack:Array<DisplayObject>;
@@ -2473,6 +2474,9 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		__mouseY = targetPoint.y;
 
 		var stack = [];
+		__pinnedMouseStack = stack; // Pin to instance field -- prevents GC from freeing
+		// the array during __dispatchStack calls that trigger
+		// forced GC (e.g., AppState.undo -> cpp.NativeGc.run)
 		var target:InteractiveObject = null;
 
 		if (__hitTest(__mouseX, __mouseY, true, stack, true, this))
@@ -2483,6 +2487,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		{
 			target = this;
 			stack = [this];
+			__pinnedMouseStack = stack; // Re-pin after reassignment
 		}
 
 		if (target == null) target = this;
@@ -2855,6 +2860,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 		Point.__pool.release(targetPoint);
 		Point.__pool.release(localPoint);
+		__pinnedMouseStack = null; // Unpin -- allow GC to collect after __onMouse completes
 	}
 
 	#if lime
